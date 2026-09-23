@@ -253,10 +253,28 @@
     window.toggleFullscreen = function() {
         const iframeArea = document.getElementById('gameIframeArea');
         const canvasArea = document.getElementById('gameCanvasArea');
+        const gamePage = document.querySelector('.game-page-container');
 
         if (currentGame === 'solitaire' || currentGame === 'spider' || currentGame === 'webgame') {
-            // iframe 游戏全屏
+            // iframe 游戏：全屏容器让 iframe 铺满屏幕
             if (!document.fullscreenElement) {
+                // 先隐藏多余的 UI 元素
+                const header = document.querySelector('.game-page-header');
+                const controls = document.querySelector('.game-controls');
+                const instr = document.getElementById('gameInstr');
+                if (header) header.style.display = 'none';
+                if (controls) controls.style.display = 'none';
+                if (instr) instr.style.display = 'none';
+                if (document.getElementById('gameScore')) document.getElementById('gameScore').style.display = 'none';
+                if (document.getElementById('gameHighScore')) document.getElementById('gameHighScore').style.display = 'none';
+                iframeArea.style.width = '100vw';
+                iframeArea.style.height = '100vh';
+                iframeArea.style.maxWidth = 'none';
+                iframeArea.style.borderRadius = '0';
+                iframeArea.style.margin = '0';
+                const ifr = document.getElementById('gameIframe');
+                if (ifr) { ifr.style.height = '100vh'; ifr.style.width = '100vw'; }
+
                 iframeArea.requestFullscreen().catch(err => {
                     console.error('全屏失败:', err);
                     // 降级：在新标签页打开
@@ -270,6 +288,22 @@
                 });
             } else {
                 document.exitFullscreen();
+                // 恢复 UI
+                const header = document.querySelector('.game-page-header');
+                const controls = document.querySelector('.game-controls');
+                const instr = document.getElementById('gameInstr');
+                if (header) header.style.display = '';
+                if (controls) controls.style.display = '';
+                if (instr) instr.style.display = '';
+                if (document.getElementById('gameScore')) document.getElementById('gameScore').style.display = '';
+                if (document.getElementById('gameHighScore')) document.getElementById('gameHighScore').style.display = '';
+                iframeArea.style.width = '';
+                iframeArea.style.height = '';
+                iframeArea.style.maxWidth = '';
+                iframeArea.style.borderRadius = '';
+                iframeArea.style.margin = '';
+                const ifr = document.getElementById('gameIframe');
+                if (ifr) { ifr.style.height = ''; ifr.style.width = ''; }
             }
         } else {
             // canvas 游戏全屏

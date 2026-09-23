@@ -123,6 +123,13 @@
             display: block;
         }
 
+        .game-iframe-area:fullscreen iframe,
+        .game-iframe-area:-webkit-full-screen iframe {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+        }
+
         .iframe-fallback {
             display: none;
             flex-direction: column;
