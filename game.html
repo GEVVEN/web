@@ -202,6 +202,9 @@
         .game-fullscreen-btn {
             font-size: 13px;
             padding: 8px 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: #fff !important;
+            border: none !important;
         }
 
         .game-instructions {
@@ -264,7 +267,7 @@
             <div class="game-controls">
                 <button class="game-btn primary-btn" id="gameStartBtn" onclick="startGame()">开始游戏</button>
                 <button class="game-btn" id="gamePauseBtn" onclick="togglePause()">暂停</button>
-                <button class="game-btn game-fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="display:none;">全屏</button>
+                <button class="game-btn game-fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="display:none;">新窗口</button>
             </div>
 
             <p class="game-instructions" id="gameInstr"></p>
