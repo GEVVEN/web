@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// ===== 全局状态 =====
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// ===== 全局状态 =====
 let currentUser = null;
 let __content = [];
 let __users = {};
@@ -221,14 +221,21 @@ function renderGames() {
     const customGames = __games.filter(g => g.status === 'approved');
     const allGames = [...defaultGames, ...customGames];
 
-    container.innerHTML = allGames.map(game => `
-        <a href="${escapeHtml(game.url)}" class="game-card">
+    container.innerHTML = allGames.map(game => {
+        let href = 'game.html';
+        if (game.url && game.url.startsWith('http')) {
+            href += '?url=' + encodeURIComponent(game.url);
+        } else {
+            href += '?game=' + escapeHtml(game.id || game.name);
+        }
+        return `
+        <a href="${href}" class="game-card">
             <div class="game-card-icon">${escapeHtml(game.emoji || '🎮')}</div>
             <h3 class="game-card-title">${escapeHtml(game.name)}</h3>
             <p class="game-card-desc">${escapeHtml(game.desc || game.description || '')}</p>
             <span class="game-card-tag">${escapeHtml(game.tag || '游戏')}</span>
-        </a>
-    `).join('');
+        </a>`;
+    }).join('');
 }
 
 // ===== 详情页弹窗 =====
