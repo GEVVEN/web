@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小游戏</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-page-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 80px 20px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+        }
+
+        .game-page-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .game-page-title {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .game-page-desc {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .game-play-area {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(24px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12);
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        body.dark-theme .game-play-area {
+            background: rgba(30, 35, 50, 0.6);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-info-bar {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .game-score, .game-highscore {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-color);
+            background: rgba(255,255,255,0.4);
+            padding: 6px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        body.dark-theme .game-score,
+        body.dark-theme .game-highscore {
+            background: rgba(255,255,255,0.07);
+            color: #e2e8f0;
+        }
+
+        .game-canvas-wrap {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .game-canvas-wrap canvas {
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            display: block;
+            max-width: 100%;
+        }
+
+        .game-iframe-area {
+            display: none;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .game-iframe-area iframe {
+            width: 100%;
+            height: 560px;
+            border: none;
+            display: block;
+        }
+
+        .iframe-fallback {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 560px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            color: #fff;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .iframe-fallback a {
+            display: inline-block;
+            padding: 12px 32px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .iframe-fallback a:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .game-btn {
+            padding: 10px 22px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: all 0.25s;
+            backdrop-filter: blur(12px);
+        }
+
+        .game-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+        }
+
+        .game-btn.primary-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border: none;
+        }
+
+        .game-btn.primary-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+        }
+
+        .game-fullscreen-btn {
+            font-size: 13px;
+            padding: 8px 18px;
+        }
+
+        .game-instructions {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        body.dark-theme .game-instructions {
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .game-play-area {
+                padding: 20px 16px;
+            }
+            .game-page-title {
+                font-size: 24px;
+            }
+            .game-iframe-area iframe {
+                height: 460px;
+            }
+            .iframe-fallback {
+                height: 460px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="glass-btn game-back-btn" onclick="goBack()">← 返回</button>
+
+    <div class="game-page-container">
+        <div class="game-page-header">
+            <h1 class="game-page-title" id="gameTitle">小游戏</h1>
+            <p class="game-page-desc" id="gameDesc">选择一个游戏开始玩吧</p>
+        </div>
+
+        <div class="game-play-area">
+            <div class="game-info-bar">
+                <div class="game-score" id="gameScore">分数: 0</div>
+                <div class="game-highscore" id="gameHighScore">最高分: --</div>
+            </div>
+
+            <div class="game-canvas-wrap" id="gameCanvasArea">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <div class="game-iframe-area" id="gameIframeArea">
+                <iframe id="gameIframe" src="" scrolling="no" loading="lazy"></iframe>
+                <div class="iframe-fallback" id="iframeFallback">
+                    <div style="font-size: 48px;">🃏</div>
+                    <div style="font-size: 18px; font-weight: bold;">页面加载失败</div>
+                    <div style="font-size: 14px; opacity: 0.8;">点击下方按钮直接访问游戏网站</div>
+                    <a href="https://www.2144.com/kongjian/klondike/" target="_blank" rel="noopener noreferrer">直接访问纸牌接龙</a>
+                    <div style="font-size: 12px; opacity: 0.6; margin-top: 8px;">如果按钮无效，请检查网络连接</div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button class="game-btn primary-btn" id="gameStartBtn" onclick="startGame()">开始游戏</button>
+                <button class="game-btn" id="gamePauseBtn" onclick="togglePause()">暂停</button>
+                <button class="game-btn game-fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="display:none;">全屏</button>
+            </div>
+
+            <p class="game-instructions" id="gameInstr"></p>
+        </div>
+    </div>
+
+    <script src="games.js"></script>
+    <script src="solitaire.js"></script>
+    <script src="spider.js"></script>
+    <script src="game-main.js"></script>
+</body>
+</html>

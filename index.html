@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎来到这里</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 背景效果 -->
+    <div class="bg-gradient"></div>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+    </div>
+    
+    <!-- 烟花容器 -->
+    <div class="firework-container" id="fireworkContainer"></div>
+    
+    <!-- 公告栏 -->
+    <div id="announcementBar" class="announcement-bar" style="display:none;"></div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar glass">
+        <div class="nav-container">
+            <div class="nav-logo">✨ 欢迎来到这里</div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link">首页</a>
+                <a href="#resources" class="nav-link">资源分享</a>
+                <a href="#tutorials" class="nav-link">使用教程</a>
+                <a href="#tools" class="nav-link">实用工具</a>
+                <a href="#games" class="nav-link">小游戏</a>
+            </div>
+            <div class="nav-right">
+                <button class="glass-btn signin-btn" onclick="openSignInModal()">🔐 SIGN IN</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 首页 Hero 区域 -->
+    <section id="home" class="section hero-section">
+        <div class="hero-content">
+            <div class="hero-badge">🎯 用心发现 · 快乐分享</div>
+            <h1 class="hero-title">欢迎来到这里</h1>
+            <p class="hero-subtitle-main">一个实用的分享网站</p>
+            <p class="hero-desc" style="font-size:15px;color:var(--text-muted);margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7;"></p>
+            <p class="hero-subtitle">探索 · 分享 · 创造</p>
+            <div class="scroll-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 资源分享 -->
+    <section id="resources" class="section">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">📦 资源分享</h2>
+                <p class="section-subtitle">发现优质资源，共建共享社区</p>
+            </div>
+            <button class="submit-btn glass-btn primary-btn" onclick="openSubmitModal('resources')">+ 投稿资源</button>
+        </div>
+        <div class="content-container glass">
+            <div class="sub-section">
+                <div class="sub-section-header">
+                    <span class="sub-section-dot"></span>
+                    <h3 class="sub-section-title">🌐 网页分享</h3>
+                </div>
+                <div class="content-grid" id="resources-websites">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p class="empty-text">暂无网页分享</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sub-section">
+                <div class="sub-section-header">
+                    <span class="sub-section-dot"></span>
+                    <h3 class="sub-section-title">🖼️ 壁纸 (图片分享)</h3>
+                </div>
+                <div class="content-grid" id="resources-wallpapers">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p class="empty-text">暂无壁纸分享</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 使用教程 -->
+    <section id="tutorials" class="section">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">📚 使用教程</h2>
+                <p class="section-subtitle">从入门到精通，一起学习成长</p>
+            </div>
+            <button class="submit-btn glass-btn primary-btn" onclick="openSubmitModal('tutorials')">+ 投稿教程</button>
+        </div>
+        <div class="content-container glass" id="tutorials-content">
+            <div class="empty-state">
+                <div class="empty-icon">📖</div>
+                <p class="empty-text">暂无教程</p>
+                <p class="empty-subtext">点击右上角投稿按钮分享你的优质教程</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 实用工具 -->
+    <section id="tools" class="section">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">🛠️ 实用工具</h2>
+                <p class="section-subtitle">精选软件，提升你的效率</p>
+            </div>
+            <button class="submit-btn glass-btn primary-btn" onclick="openSubmitModal('tools')">+ 投稿工具</button>
+        </div>
+        <div class="content-container glass" id="tools-content">
+            <div class="empty-state">
+                <div class="empty-icon">🔧</div>
+                <p class="empty-text">暂无工具</p>
+                <p class="empty-subtext">点击右上角投稿按钮分享你的实用工具（需要图片 + exe/apk文件 + 简介）</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 小游戏 -->
+    <section id="games" class="section">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">🎮 小游戏</h2>
+                <p class="section-subtitle">忙里偷闲，放松一下心情</p>
+            </div>
+        </div>
+        <div class="games-list-container" id="gamesContainer">
+            <a href="game.html?game=tetris" class="game-card">
+                <div class="game-card-icon">🧩</div>
+                <h3 class="game-card-title">俄罗斯方块</h3>
+                <p class="game-card-desc">经典益智游戏</p>
+                <span class="game-card-tag">益智</span>
+            </a>
+            <a href="game.html?game=snake" class="game-card">
+                <div class="game-card-icon">🐍</div>
+                <h3 class="game-card-title">贪吃蛇</h3>
+                <p class="game-card-desc">经典街机游戏</p>
+                <span class="game-card-tag">街机</span>
+            </a>
+            <a href="game.html?game=solitaire" class="game-card">
+                <div class="game-card-icon">🃏</div>
+                <h3 class="game-card-title">纸牌接龙</h3>
+                <p class="game-card-desc">经典 Klondike 接龙</p>
+                <span class="game-card-tag">棋牌</span>
+            </a>
+            <a href="game.html?game=spider" class="game-card">
+                <div class="game-card-icon">🕷️</div>
+                <h3 class="game-card-title">蜘蛛纸牌</h3>
+                <p class="game-card-desc">单色蜘蛛接龙</p>
+                <span class="game-card-tag">棋牌</span>
+            </a>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer class="footer glass">
+        <p>© 2026 欢迎来到这里 · 一个实用的分享网站 · 用心分享每一份资源</p>
+        <button class="admin-entry" onclick="goToAdmin()" title="后台入口">⚙</button>
+    </footer>
+    
+    <!-- 投稿弹窗 -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal glass submit-modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">📤 投稿</h3>
+                <button class="modal-close" onclick="closeSubmitModal()">✕</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- 步骤1：资源分享双分类选择（仅在从资源分享板块点击时显示） -->
+                <div id="submitStep1" style="display:none;">
+                    <div class="category-tabs">
+                        <div class="category-tab" onclick="selectSubmitType('website')">
+                            <span class="category-tab-icon">🌐</span>
+                            <span class="category-tab-label">网页分享</span>
+                        </div>
+                        <div class="category-tab" onclick="selectSubmitType('wallpaper')">
+                            <span class="category-tab-icon">🖼️</span>
+                            <span class="category-tab-label">图片分享</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2：填写内容 -->
+                <div id="submitStep2" style="display:none;">
+                    <!-- 返回按钮（仅资源分享时显示） -->
+                    <div id="backBtnRow" class="submit-back-row">
+                        <button class="glass-btn back-btn" onclick="goBackToStep1()">←</button>
+                        <span id="submitStep2Title" style="font-weight:600;font-size:15px;color:var(--text-color);margin-left:10px;display:inline;"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelName">名称 <span class="req">*</span></label>
+                        <input type="text" class="glass-input" id="submitTitle" placeholder="请输入名称">
+                    </div>
+
+                    <!-- 网页分享 -->
+                    <div id="websiteFields" style="display:none;">
+                        <div class="form-group">
+                            <label>网页简介 <span class="req">*</span></label>
+                            <textarea class="glass-input" id="submitDescWebsite" rows="3" placeholder="请简要描述这个网站..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>网页链接 <span class="req">*</span></label>
+                            <input type="url" class="glass-input" id="submitLink" placeholder="https://...">
+                        </div>
+                    </div>
+
+                    <!-- 图片分享 -->
+                    <div id="wallpaperFields" style="display:none;">
+                        <div class="form-group">
+                            <label>图片介绍 <span class="hint">(可选)</span></label>
+                            <textarea class="glass-input" id="submitDescWallpaper" rows="2" placeholder="简单介绍一下这张图片..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 教程分享 -->
+                    <div id="tutorialFields" style="display:none;">
+                        <div class="form-group">
+                            <label>教程内容描述 <span class="req">*</span></label>
+                            <textarea class="glass-input" id="submitDescTutorial" rows="3" placeholder="请简要描述你的教程内容..."></textarea>
+                        </div>
+                        <p class="helper-text">💡 建议附上图片展示步骤，可上传视频演示</p>
+                    </div>
+
+                    <!-- 工具分享 -->
+                    <div id="toolFields" style="display:none;">
+                        <div class="form-group">
+                            <label>软件简介 <span class="req">*</span></label>
+                            <textarea class="glass-input" id="submitDescTool" rows="2" placeholder="请介绍这个工具的用途..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 文件上传 -->
+                    <div class="form-group">
+                        <label id="labelFile">附件 <span class="hint" id="fileHint"></span></label>
+                        <div class="drop-zone" id="dropZoneImg">
+                            <div class="drop-zone-content">
+                                <div class="drop-icon">📁</div>
+                                <p id="dropText">拖拽文件到此处或点击选择</p>
+                                <p class="drop-hint" id="dropHint">支持图片 / 视频</p>
+                            </div>
+                            <input type="file" id="fileInputImg" accept="image/*,video/*,.exe,.apk,.zip,.rar,application/*" multiple hidden>
+                        </div>
+                        <div class="file-preview" id="filePreviewImg"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>补充说明 <span class="hint">(可选)</span></label>
+                        <textarea class="glass-input" id="submitContent" rows="2" placeholder="其他补充信息..."></textarea>
+                    </div>
+
+                    <button class="glass-btn full-btn primary-btn submit-btn" onclick="submitContent()">✓ 提交审核</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 登录/注册弹窗 -->
+    <div class="modal-overlay" id="signinModal">
+        <div class="modal glass signin-modal">
+            <div class="modal-header">
+                <h3 id="signinTitle">SIGN IN</h3>
+                <button class="modal-close" onclick="closeSignInModal()">✕</button>
+            </div>
+            <div class="modal-body" id="signinBody">
+                <!-- 已登录状态 -->
+                <div id="signinLoggedInView" style="display:none;">
+                    <div style="text-align:center;padding:20px 0;">
+                        <div style="font-size:48px;margin-bottom:15px;">✅</div>
+                        <p style="font-size:18px;font-weight:700;color:var(--success-color);margin-bottom:10px;" id="signinWelcomeMsg"></p>
+                        <p style="color:var(--text-muted);font-size:14px;">您已登录，可以投稿和分享</p>
+                        <button class="glass-btn full-btn primary-btn" style="margin-top:25px;" onclick="closeSignInModal()">关闭</button>
+                        <button class="glass-btn full-btn" style="margin-top:12px;width:100%;" onclick="logoutUser()">退出登录</button>
+                    </div>
+                </div>
+                <!-- 未登录 - 登录视图 -->
+                <div id="signinLoginView">
+                    <p class="auth-modal-subtitle" style="margin-top:0;margin-bottom:22px;">登录已有账号，继续您的分享之旅</p>
+                    <div class="form-group">
+                        <label>昵称<span class="req">*</span></label>
+                        <input type="text" class="glass-input" id="signinLoginNickname" placeholder="请输入昵称" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>密码<span class="req">*</span></label>
+                        <input type="password" class="glass-input" id="signinLoginPassword" placeholder="请输入密码" maxlength="32">
+                    </div>
+                    <button class="glass-btn full-btn primary-btn" onclick="doLogin()">登录 →</button>
+                    <div class="auth-switch">还没有账号？<a onclick="openRegisterView()">去注册</a></div>
+                    <div id="signinLoginError" style="color:#ef4444;font-size:13px;margin-top:10px;display:none;"></div>
+                </div>
+                <!-- 注册视图 -->
+                <div id="signinRegisterView" style="display:none;">
+                    <p class="auth-modal-subtitle" style="margin-top:0;margin-bottom:22px;">注册新账号，开始你的分享之旅</p>
+                    <div class="form-group">
+                        <label>昵称<span class="req">*</span></label>
+                        <input type="text" class="glass-input" id="registerNickname" placeholder="请输入昵称（2-20字符）" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>密码<span class="req">*</span></label>
+                        <input type="password" class="glass-input" id="registerPassword" placeholder="请设置密码（至少4位）" maxlength="32">
+                    </div>
+                    <div class="form-group">
+                        <label>确认密码<span class="req">*</span></label>
+                        <input type="password" class="glass-input" id="registerConfirmPassword" placeholder="请再次输入密码" maxlength="32">
+                    </div>
+                    <button class="glass-btn full-btn primary-btn" onclick="doRegister()">注册并登录 →</button>
+                    <div class="auth-switch">已有账号？<a onclick="openLoginView()">去登录</a></div>
+                    <div id="registerError" style="color:#ef4444;font-size:13px;margin-top:10px;display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 详情页弹窗 -->
+    <div class="modal-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+        <div class="modal glass detail-modal">
+            <div class="modal-header">
+                <h3 id="detailTitle"></h3>
+                <button class="modal-close" onclick="closeDetail()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="detailAuthor" class="submission-meta"></div>
+                <div id="detailMedia"></div>
+                <div id="detailDesc" style="font-size:14px;color:var(--text-muted);"></div>
+                <div id="detailContent" style="font-size:14px;color:var(--text-muted);"></div>
+                <div id="detailLink" style="margin-top:8px;"></div>
+                <div id="detailFiles"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+    <script>
+        // 主题切换
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') document.body.classList.add('dark-theme');
+        })();
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>

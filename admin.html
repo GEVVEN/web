@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--body-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        body.dark-theme { --body-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+
+        .admin-page { min-height: 100vh; padding: 80px 20px 40px; max-width: 1100px; margin: 0 auto; overflow-x: hidden; }
+
+        .admin-login {
+            max-width: 420px;
+            margin: 60px auto;
+            padding: 40px;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(24px);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 8px 32px rgba(102,126,234,0.15);
+        }
+        body.dark-theme .admin-login { background: rgba(30,35,50,0.7); border-color: rgba(255,255,255,0.08); }
+
+        .admin-login h2 { text-align: center; margin-bottom: 24px; color: var(--primary-color); font-size: 24px; }
+
+        .glass-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.5);
+            font-size: 15px;
+            color: var(--text-color);
+            outline: none;
+            transition: all 0.2s;
+        }
+        .glass-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+            background: rgba(255,255,255,0.7);
+        }
+        body.dark-theme .glass-input {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            color: #e2e8f0;
+        }
+        body.dark-theme .glass-input:focus {
+            border-color: var(--primary-color);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .glass-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .full-btn {
+            width: 100%;
+            padding: 13px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .full-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+
+        /* 登录后的后台 */
+        .admin-dashboard { display: none; }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .admin-header h2 { color: var(--primary-color); font-size: 24px; }
+
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: all 0.25s;
+            backdrop-filter: blur(12px);
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; overflow-x: hidden; }
+
+        .panel-card {
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(24px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.7);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        body.dark-theme .panel-card { background: rgba(30,35,50,0.6); border-color: rgba(255,255,255,0.08); }
+
+        .panel-card h3 { margin-top: 0; color: var(--primary-color); }
+
+        .submissions-list { max-height: 500px; overflow-y: auto; }
+        .submission-item {
+            background: rgba(255,255,255,0.4);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--glass-border);
+        }
+        body.dark-theme .submission-item { background: rgba(255,255,255,0.06); }
+
+        .submission-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+        .submission-title { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-height: 2.6em; line-height: 1.3; }
+        .submission-meta { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .submission-author { color: var(--secondary-color); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .submission-status {
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-approved { background: #d1fae5; color: #059669; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+
+        .submission-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-height: 3.2em; line-height: 1.5; }
+
+        .submission-preview img, .submission-preview video {
+            max-width: 100%;
+            max-height: 160px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .submission-link { color: var(--primary-color); word-break: break-all; font-size: 13px; }
+
+        .action-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .action-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .approve-btn { background: #d1fae5; color: #059669; }
+        .approve-btn:hover { background: #059669; color: #fff; }
+        .reject-btn { background: #fee2e2; color: #dc2626; }
+        .reject-btn:hover { background: #dc2626; color: #fff; }
+        .delete-btn { background: #e5e7eb; color: #6b7280; }
+        .delete-btn:hover { background: #6b7280; color: #fff; }
+        .edit-btn { background: #dbeafe; color: #2563eb; }
+        .edit-btn:hover { background: #2563eb; color: #fff; }
+        .publish-btn { background: #d1fae5; color: #059669; }
+        .publish-btn:hover { background: #059669; color: #fff; }
+
+        .game-manage-item {
+            background: rgba(255,255,255,0.4);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.dark-theme .game-manage-item { background: rgba(255,255,255,0.06); }
+        .game-manage-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .game-manage-emoji { font-size: 28px; flex-shrink: 0; }
+        .game-manage-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+        .game-manage-url { font-size: 12px; color: var(--text-muted); word-break: break-all; }
+
+        .admin-form { display: flex; flex-direction: column; gap: 12px; }
+        .admin-form .form-group { margin-bottom: 0; }
+
+        /* Toast 非绿色主题 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 14px;
+            color: #fff;
+            font-weight: 600;
+            z-index: 9999;
+            animation: slideInRight 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            backdrop-filter: blur(12px);
+        }
+        .toast-success { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .toast-info { background: linear-gradient(135deg, #667eea, #764ba2); }
+
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* 编辑弹窗 */
+        .edit-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .edit-modal-overlay.active { display: flex; }
+        .edit-modal {
+            max-width: 520px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(24px);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.7);
+            padding: 28px;
+        }
+        body.dark-theme .edit-modal { background: rgba(30,35,50,0.8); border-color: rgba(255,255,255,0.08); }
+        .edit-modal h3 { margin: 0 0 20px; color: var(--primary-color); }
+        .edit-modal .form-group { margin-bottom: 14px; }
+        .edit-modal .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .edit-modal { position: relative; }
+
+        /* 管理员添加投稿 */
+        .admin-add-section {
+            border-top: 1px solid var(--glass-border);
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+        .admin-add-section h4 { color: var(--primary-color); margin-bottom: 14px; }
+
+        /* 公告栏管理 */
+        .announcement-item {
+            background: rgba(255,255,255,0.4);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        body.dark-theme .announcement-item { background: rgba(255,255,255,0.06); }
+        .announcement-content { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .announcement-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .tiny-btn {
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tiny-btn-toggle { background: #dbeafe; color: #2563eb; }
+        .tiny-btn-toggle.inactive { background: #e5e7eb; color: #6b7280; }
+        .tiny-btn-del { background: #fee2e2; color: #dc2626; }
+        .tiny-btn-del:hover { background: #dc2626; color: #fff; }
+
+        .add-announce-form { display: flex; gap: 8px; margin-top: 12px; }
+        .add-announce-form input { flex: 1; }
+        .add-announce-form button { width: auto; margin-top: 0; padding: 12px 20px; }
+    </style>
+</head>
+<body>
+    <div class="admin-page">
+        <!-- 登录界面 -->
+        <div class="admin-login" id="loginPanel">
+            <h2>🔐 后台管理</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="glass-label">管理员账号</label>
+                    <input type="text" class="glass-input" id="adminUser" placeholder="请输入管理员账号" required>
+                </div>
+                <div class="form-group">
+                    <label class="glass-label">密码</label>
+                    <input type="password" class="glass-input" id="adminPass" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="full-btn">登录</button>
+            </form>
+        </div>
+
+        <!-- 后台仪表盘 -->
+        <div class="admin-dashboard" id="dashboard">
+            <div class="admin-header">
+                <h2>🎛️ 后台管理中心</h2>
+                <button class="glass-btn" onclick="handleLogout()">退出登录</button>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchTab('submissions', this)">📥 投稿审核</button>
+                <button class="tab-btn" onclick="switchTab('addpost', this)">➕ 管理员投稿</button>
+                <button class="tab-btn" onclick="switchTab('games', this)">🎮 小游戏管理</button>
+                <button class="tab-btn" onclick="switchTab('homeconfig', this)">🏠 首页配置</button>
+                <button class="tab-btn" onclick="switchTab('announcements', this)">📢 公告栏</button>
+                <button class="tab-btn" onclick="switchTab('feedback', this)">💬 用户反馈</button>
+            </div>
+
+            <!-- 投稿审核 -->
+            <div class="admin-panel active" id="panel-submissions">
+                <div class="panel-card">
+                    <h3>📥 投稿审核列表 <span style="font-size:12px;font-weight:400;color:var(--text-muted);" id="refreshHint">每5秒自动刷新</span></h3>
+                    <div class="submissions-list" id="submissionsList">
+                        <p style="color:var(--text-muted); text-align:center; padding:20px;">暂无投稿内容</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理员自己添加投稿 -->
+            <div class="admin-panel" id="panel-addpost">
+                <div class="panel-card">
+                    <h3>➕ 管理员直接添加投稿</h3>
+                    <div class="admin-form">
+                        <div class="form-group">
+                            <label class="glass-label">投稿类型</label>
+                            <select class="glass-input" id="adminPostType" onchange="adminPostTypeChange()">
+                                <option value="website">🌐 网页分享</option>
+                                <option value="wallpaper">🖼️ 图片分享</option>
+                                <option value="tutorial">📚 使用教程</option>
+                                <option value="tool">🛠️ 实用工具</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">标题 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" class="glass-input" id="adminPostTitle" placeholder="请输入标题">
+                        </div>
+                        <div class="form-group" id="adminPostDescGroup">
+                            <label class="glass-label">简介 <span style="color:#ef4444;" id="adminPostDescReq">*</span></label>
+                            <textarea class="glass-input" id="adminPostDesc" rows="3" placeholder="请输入简介"></textarea>
+                        </div>
+                        <div class="form-group" id="adminPostLinkGroup" style="display:none;">
+                            <label class="glass-label">网页链接 <span style="color:#ef4444;">*</span></label>
+                            <input type="url" class="glass-input" id="adminPostLink" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">封面图 / 图片（可多选）</label>
+                            <input type="file" class="glass-input" id="adminPostCover" accept="image/*" multiple onchange="adminPostPreviewFiles(this)">
+                            <div id="adminPostFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">视频（可选）</label>
+                            <input type="file" class="glass-input" id="adminPostVideo" accept="video/*" onchange="adminPostPreviewVideo(this)">
+                            <div id="adminPostVideoPreview" style="margin-top:8px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">附件（可选，支持 exe/apk/zip 等）</label>
+                            <input type="file" class="glass-input" id="adminPostFile" accept=".exe,.apk,.zip,.rar,application/*" multiple onchange="adminPostPreviewFiles(this)">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">补充说明</label>
+                            <textarea class="glass-input" id="adminPostContent" rows="2" placeholder="其他补充信息..."></textarea>
+                        </div>
+                        <button class="full-btn" onclick="adminAddPost()">✅ 直接发布（无需审核）</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 小游戏管理 -->
+            <div class="admin-panel" id="panel-games">
+                <div class="panel-card">
+                    <h3>🎮 添加新小游戏</h3>
+                    <div class="admin-form">
+                        <div class="form-group">
+                            <label class="glass-label">游戏名称</label>
+                            <input type="text" class="glass-input" id="newGameName" placeholder="例如：双人俄罗斯方块">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">游戏图标 Emoji</label>
+                            <input type="text" class="glass-input" id="newGameEmoji" placeholder="例如：🎲">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">游戏简介</label>
+                            <input type="text" class="glass-input" id="newGameDesc" placeholder="简短描述游戏">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">游戏链接 (URL)</label>
+                            <input type="text" class="glass-input" id="newGameUrl" placeholder="https://example.com/game">
+                        </div>
+                        <button class="full-btn" onclick="addGame()">添加游戏</button>
+                    </div>
+                </div>
+                <div class="panel-card">
+                    <h3>🎮 已添加的游戏</h3>
+                    <div id="gamesList"></div>
+                </div>
+            </div>
+
+            <!-- 首页配置 -->
+            <div class="admin-panel" id="panel-homeconfig">
+                <div class="panel-card">
+                    <h3>🏠 首页自定义设置</h3>
+                    <div class="admin-form">
+                        <div class="form-group">
+                            <label class="glass-label">导航栏标题</label>
+                            <input type="text" class="glass-input" id="navTitle" placeholder="欢迎来到这里">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">首页主标题</label>
+                            <input type="text" class="glass-input" id="heroTitle" placeholder="首页大标题">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">首页副标题</label>
+                            <input type="text" class="glass-input" id="homeSubtitle" placeholder="输入首页副标题">
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">首页说明文字</label>
+                            <textarea class="glass-input" id="homeDesc" rows="3" placeholder="首页介绍文字，显示在主标题下方"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="glass-label">B站账号链接</label>
+                            <input type="text" class="glass-input" id="bilibiliLink" placeholder="https://space.bilibili.com/xxx">
+                        </div>
+                        <button class="full-btn" onclick="saveHomeConfig()">保存设置</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 公告栏管理 -->
+            <div class="admin-panel" id="panel-announcements">
+                <div class="panel-card">
+                    <h3>📢 公告栏管理</h3>
+                    <div id="announcementsList"></div>
+                    <div class="add-announce-form">
+                        <input type="text" class="glass-input" id="newAnnouncement" placeholder="输入新公告内容...">
+                        <button class="full-btn" style="margin-top:0;" onclick="addAnnouncement()">添加</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户反馈 -->
+            <div class="admin-panel" id="panel-feedback">
+                <div class="panel-card">
+                    <h3>💬 用户反馈</h3>
+                    <div id="feedbackList">
+                        <p style="color:var(--text-muted); text-align:center; padding:20px;">暂无用户反馈</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑投稿弹窗 -->
+    <div class="edit-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
+        <div class="edit-modal" style="position:relative;">
+            <button class="modal-close" onclick="closeEditModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;font-size:16px;">✕</button>
+            <h3>✏️ 编辑投稿</h3>
+            <div class="admin-form">
+                <div class="form-group">
+                    <label class="glass-label">标题</label>
+                    <input type="text" class="glass-input" id="editTitle">
+                </div>
+                <div class="form-group">
+                    <label class="glass-label">新封面图</label>
+                    <input type="file" class="glass-input" id="editCover" accept="image/*" onchange="previewEditCover(this)">
+                    <div id="editCoverPreview" style="margin-top:8px;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="glass-label">简介</label>
+                    <textarea class="glass-input" id="editDesc" rows="3"></textarea>
+                </div>
+                <div class="form-group" id="editLinkGroup" style="display:none;">
+                    <label class="glass-label">网页链接</label>
+                    <input type="url" class="glass-input" id="editLink">
+                </div>
+                <button class="full-btn" onclick="saveEdit()">💾 保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 数据管理 =====
+        const ADMIN_USER = '7891666';
+        const ADMIN_PASS = '354356857';
+        const DEFAULT_GAMES = [
+            { id: 'tetris', name: '俄罗斯方块', emoji: '🧩', desc: '经典益智游戏', tag: '益智', url: 'game.html?game=tetris' },
+            { id: 'snake', name: '贪吃蛇', emoji: '🐍', desc: '经典街机游戏', tag: '街机', url: 'game.html?game=snake' },
+            { id: 'solitaire', name: '纸牌接龙', emoji: '🃏', desc: '经典 Klondike 接龙', tag: '棋牌', url: 'game.html?game=solitaire' },
+            { id: 'spider', name: '蜘蛛纸牌', emoji: '🕷️', desc: '单色蜘蛛纸牌', tag: '棋牌', url: 'game.html?game=spider' }
+        ];
+
+        let __editItemId = null;
+        let __editTempCover = '';
+
+        function loadData() {
+            if (!localStorage.getItem('users')) localStorage.setItem('users', '{}');
+            if (!localStorage.getItem('content')) localStorage.setItem('content', '[]');
+            if (!localStorage.getItem('adminConfig')) localStorage.setItem('adminConfig', '{}');
+            if (!localStorage.getItem('adminFeedback')) localStorage.setItem('adminFeedback', '[]');
+            if (!localStorage.getItem('customGames')) localStorage.setItem('customGames', '[]');
+            if (!localStorage.getItem('announcements')) localStorage.setItem('announcements', '[]');
+            return {
+                users: JSON.parse(localStorage.getItem('users')),
+                content: JSON.parse(localStorage.getItem('content')),
+                config: JSON.parse(localStorage.getItem('adminConfig')),
+                feedback: JSON.parse(localStorage.getItem('adminFeedback')),
+                customGames: JSON.parse(localStorage.getItem('customGames')),
+                announcements: JSON.parse(localStorage.getItem('announcements'))
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem('users', JSON.stringify(data.users));
+            localStorage.setItem('content', JSON.stringify(data.content));
+            localStorage.setItem('adminConfig', JSON.stringify(data.config));
+            localStorage.setItem('adminFeedback', JSON.stringify(data.feedback));
+            localStorage.setItem('customGames', JSON.stringify(data.customGames));
+            localStorage.setItem('announcements', JSON.stringify(data.announcements));
+        }
+
+        // ===== 登录系统 =====
+        let isLoggedIn = false;
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value;
+
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                isLoggedIn = true;
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                renderSubmissions();
+                renderGames();
+                loadConfig();
+                renderAnnouncements();
+                showToast('登录成功！', 'success');
+            } else {
+                showToast('账号或密码错误！', 'error');
+            }
+        }
+
+        function handleLogout() {
+            isLoggedIn = false;
+            document.getElementById('loginPanel').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
+            showToast('已退出登录', 'info');
+        }
+
+        // ===== 投稿审核（含自动刷新） =====
+        function renderSubmissions() {
+            const data = loadData();
+            const list = document.getElementById('submissionsList');
+
+            if (data.content.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">暂无投稿内容</p>';
+                return;
+            }
+
+            const sorted = [...data.content].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            list.innerHTML = sorted.map(item => {
+                const date = new Date(item.createdAt).toLocaleString('zh-CN');
+                const statusClass = item.status === 'pending' ? 'status-pending' : item.status === 'approved' ? 'status-approved' : 'status-rejected';
+                const statusText = item.status === 'pending' ? '待审核' : item.status === 'approved' ? '已通过' : '已拒绝';
+
+                let mediaHtml = '';
+                if (item.coverImage) {
+                    mediaHtml = `<img src="${esc(item.coverImage)}" style="max-width:100%;max-height:180px;border-radius:10px;margin-bottom:8px;">`;
+                } else if (item.images && item.images.length > 0) {
+                    mediaHtml = item.images.slice(0, 3).map(img => `<img src="${esc(img)}" style="max-width:100px;border-radius:8px;margin:4px;display:inline-block;">`).join('');
+                }
+
+                let videoHtml = '';
+                if (item.videos && item.videos.length > 0) {
+                    videoHtml = `<video src="${esc(item.videos[0])}" controls style="max-width:100%;max-height:180px;border-radius:10px;margin-bottom:8px;display:block;"></video>`;
+                }
+
+                let filesHtml = '';
+                if (item.files && item.files.length > 0) {
+                    filesHtml = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">📎 ${item.files.map(f => esc(f.name)).join(', ')}</div>`;
+                }
+
+                return `
+                    <div class="submission-item" id="sub-${item.id}">
+                        <div class="submission-header">
+                            <span class="submission-title">${esc(item.title)}</span>
+                            <span class="submission-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="submission-meta">
+                            <span class="submission-author">作者: ${esc(item.author)}</span> · ${date}
+                            · 类型: ${getTypeLabel(item.type)}
+                        </div>
+                        ${item.description ? `<div class="submission-desc">${esc(item.description)}</div>` : ''}
+                        ${item.link ? `<div class="submission-link"><a href="${esc(item.link)}" target="_blank" rel="noopener">${esc(item.link)}</a></div>` : ''}
+                        ${mediaHtml ? `<div class="submission-preview">${mediaHtml}</div>` : ''}
+                        ${videoHtml}
+                        ${filesHtml}
+                        <div class="action-btns">
+                            <button class="action-btn edit-btn" onclick="openEditModal(${item.id})">✏️ 编辑</button>
+                            ${item.status === 'pending' ? `
+                                <button class="action-btn approve-btn" onclick="approveItem(${item.id})">✅ 通过</button>
+                                <button class="action-btn reject-btn" onclick="rejectItem(${item.id})">❌ 拒绝</button>
+                            ` : ''}
+                            <button class="action-btn delete-btn" onclick="deleteSubmission(${item.id})">🗑️ 删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getTypeLabel(type) {
+            const map = { website: '网页', wallpaper: '图片', tutorial: '教程', tool: '工具' };
+            return map[type] || type;
+        }
+
+        // 每5秒自动刷新投稿列表
+        setInterval(() => {
+            if (isLoggedIn) {
+                renderSubmissions();
+                renderAnnouncements();
+            }
+        }, 5000);
+
+        function approveItem(id) {
+            const data = loadData();
+            const item = data.content.find(c => c.id === id);
+            if (item) {
+                item.status = 'approved';
+                saveData(data);
+                renderSubmissions();
+                showToast('已审核通过！', 'success');
+            }
+        }
+
+        function rejectItem(id) {
+            const data = loadData();
+            const item = data.content.find(c => c.id === id);
+            if (item) {
+                item.status = 'rejected';
+                saveData(data);
+                renderSubmissions();
+                showToast('已拒绝！', 'error');
+            }
+        }
+
+        function deleteSubmission(id) {
+            if (!confirm('确定要删除这条投稿吗？')) return;
+            const data = loadData();
+            data.content = data.content.filter(c => c.id !== id);
+            saveData(data);
+            renderSubmissions();
+            showToast('已删除！', 'info');
+        }
+
+        // ===== 编辑投稿 =====
+        function openEditModal(id) {
+            const data = loadData();
+            const item = data.content.find(c => c.id === id);
+            if (!item) return;
+
+            __editItemId = id;
+            __editTempCover = item.coverImage || '';
+
+            document.getElementById('editTitle').value = item.title || '';
+            document.getElementById('editDesc').value = item.description || '';
+            document.getElementById('editLink').value = item.link || '';
+            document.getElementById('editLinkGroup').style.display = item.type === 'website' ? 'block' : 'none';
+
+            const preview = document.getElementById('editCoverPreview');
+            if (__editTempCover) {
+                preview.innerHTML = `<img src="${__editTempCover}" style="max-width:120px;border-radius:8px;">`;
+            } else {
+                preview.innerHTML = '';
+            }
+
+            document.getElementById('editModalOverlay').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModalOverlay').classList.remove('active');
+            __editItemId = null;
+            __editTempCover = '';
+        }
+
+        function previewEditCover(input) {
+            const preview = document.getElementById('editCoverPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    __editTempCover = e.target.result;
+                    preview.innerHTML = `<img src="${__editTempCover}" style="max-width:120px;border-radius:8px;">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveEdit() {
+            if (!__editItemId) return;
+            const data = loadData();
+            const item = data.content.find(c => c.id === __editItemId);
+            if (!item) return;
+
+            const newTitle = document.getElementById('editTitle').value.trim();
+            const newDesc = document.getElementById('editDesc').value.trim();
+            const newLink = document.getElementById('editLink').value.trim();
+
+            if (!newTitle) { showToast('标题不能为空', 'error'); return; }
+
+            item.title = newTitle;
+            item.description = newDesc;
+            if (item.type === 'website') item.link = newLink;
+            if (__editTempCover) item.coverImage = __editTempCover;
+
+            saveData(data);
+            renderSubmissions();
+            closeEditModal();
+            showToast('保存成功！', 'success');
+        }
+
+        // ===== 管理员直接添加投稿 =====
+        let __adminPostImages = [];
+        let __adminPostVideo = '';
+
+        function adminPostTypeChange() {
+            const type = document.getElementById('adminPostType').value;
+            document.getElementById('adminPostLinkGroup').style.display = type === 'website' ? 'block' : 'none';
+        }
+
+        function adminPostPreviewFiles(input) {
+            const preview = document.getElementById('adminPostFilePreview');
+            preview.innerHTML = '';
+            __adminPostImages = [];
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    __adminPostImages.push(e.target.result);
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'max-width:80px;max-height:80px;border-radius:8px;border:1px solid var(--glass-border);';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function adminPostPreviewVideo(input) {
+            const preview = document.getElementById('adminPostVideoPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    __adminPostVideo = e.target.result;
+                    preview.innerHTML = `<video src="${__adminPostVideo}" controls style="max-width:200px;max-height:120px;border-radius:8px;"></video>`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function adminAddPost() {
+            const type = document.getElementById('adminPostType').value;
+            const title = document.getElementById('adminPostTitle').value.trim();
+            const description = document.getElementById('adminPostDesc').value.trim();
+            const link = document.getElementById('adminPostLink').value.trim();
+            const content = document.getElementById('adminPostContent').value.trim();
+
+            if (!title) { showToast('请填写标题', 'error'); return; }
+            if (type === 'website' && !link) { showToast('请填写网页链接', 'error'); return; }
+            if ((type === 'website' || type === 'tutorial' || type === 'tool') && !description) {
+                showToast('请填写简介', 'error'); return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                type,
+                title,
+                description,
+                images: __adminPostImages,
+                videos: __adminPostVideo ? [__adminPostVideo] : [],
+                files: [],
+                link: type === 'website' ? link : '',
+                downloadLink: '',
+                content,
+                coverImage: __adminPostImages[0] || '',
+                author: '管理员',
+                status: 'approved',
+                createdAt: new Date().toISOString()
+            };
+
+            const data = loadData();
+            data.content.push(newItem);
+            saveData(data);
+
+            // 清空表单
+            document.getElementById('adminPostTitle').value = '';
+            document.getElementById('adminPostDesc').value = '';
+            document.getElementById('adminPostLink').value = '';
+            document.getElementById('adminPostContent').value = '';
+            document.getElementById('adminPostFilePreview').innerHTML = '';
+            document.getElementById('adminPostVideoPreview').innerHTML = '';
+            __adminPostImages = [];
+            __adminPostVideo = '';
+
+            renderSubmissions();
+            showToast('投稿已直接发布！', 'success');
+        }
+
+        // ===== 小游戏管理 =====
+        function renderGames() {
+            const data = loadData();
+            const allGames = [...DEFAULT_GAMES, ...data.customGames];
+            const list = document.getElementById('gamesList');
+            list.innerHTML = allGames.map(game => `
+                <div class="game-manage-item">
+                    <div class="game-manage-info">
+                        <span class="game-manage-emoji">${esc(game.emoji || '🎮')}</span>
+                        <div>
+                            <div class="game-manage-name">${esc(game.name)}</div>
+                            <div class="game-manage-url">${esc(game.url || '本地游戏')}</div>
+                        </div>
+                    </div>
+                    ${!['tetris','snake','solitaire','spider'].includes(game.id) ? `<button class="action-btn delete-btn" onclick="deleteGame('${game.id}')">删除</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function addGame() {
+            const name = document.getElementById('newGameName').value.trim();
+            const emoji = document.getElementById('newGameEmoji').value.trim() || '🎮';
+            const desc = document.getElementById('newGameDesc').value.trim();
+            const url = document.getElementById('newGameUrl').value.trim();
+
+            if (!name || !url) {
+                showToast('请填写游戏名称和链接！', 'error');
+                return;
+            }
+
+            const data = loadData();
+            const id = 'custom_' + Date.now();
+            data.customGames.push({ id, name, emoji, desc, url });
+            saveData(data);
+
+            document.getElementById('newGameName').value = '';
+            document.getElementById('newGameEmoji').value = '';
+            document.getElementById('newGameDesc').value = '';
+            document.getElementById('newGameUrl').value = '';
+
+            renderGames();
+            showToast('添加成功！', 'success');
+        }
+
+        function deleteGame(id) {
+            if (!confirm('确定删除这个游戏吗？')) return;
+            const data = loadData();
+            data.customGames = data.customGames.filter(g => g.id !== id);
+            saveData(data);
+            renderGames();
+            showToast('已删除！', 'info');
+        }
+
+        // ===== 首页配置 =====
+        function loadConfig() {
+            const data = loadData();
+            document.getElementById('navTitle').value = data.config.navTitle || '✨ 欢迎来到这里';
+            document.getElementById('heroTitle').value = data.config.heroTitle || '';
+            document.getElementById('homeSubtitle').value = data.config.homeSubtitle || '';
+            document.getElementById('homeDesc').value = data.config.homeDesc || '';
+            document.getElementById('bilibiliLink').value = data.config.bilibiliLink || '';
+        }
+
+        function saveHomeConfig() {
+            const data = loadData();
+            data.config.navTitle = document.getElementById('navTitle').value.trim();
+            data.config.heroTitle = document.getElementById('heroTitle').value.trim();
+            data.config.homeSubtitle = document.getElementById('homeSubtitle').value.trim();
+            data.config.homeDesc = document.getElementById('homeDesc').value.trim();
+            data.config.bilibiliLink = document.getElementById('bilibiliLink').value.trim();
+            saveData(data);
+            showToast('保存成功！刷新首页生效', 'success');
+        }
+
+        // ===== 公告栏管理 =====
+        function renderAnnouncements() {
+            const data = loadData();
+            const list = document.getElementById('announcementsList');
+            if (data.announcements.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:16px;">暂无公告</p>';
+                return;
+            }
+            list.innerHTML = data.announcements.map(a => `
+                <div class="announcement-item">
+                    <span style="color:#f59e0b;">📢</span>
+                    <span class="announcement-content">${esc(a.content)}</span>
+                    <span class="submission-status ${a.status === 'active' ? 'status-approved' : 'status-pending'}">${a.status === 'active' ? '显示中' : '已停用'}</span>
+                    <div class="announcement-actions">
+                        <button class="tiny-btn ${a.status === 'active' ? 'tiny-btn-toggle' : 'tiny-btn-toggle inactive'}" onclick="toggleAnnouncement(${a.id})">${a.status === 'active' ? '停用' : '启用'}</button>
+                        <button class="tiny-btn tiny-btn-del" onclick="deleteAnnouncement(${a.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addAnnouncement() {
+            const input = document.getElementById('newAnnouncement');
+            const content = input.value.trim();
+            if (!content) { showToast('请输入公告内容', 'error'); return; }
+
+            const data = loadData();
+            data.announcements.push({
+                id: Date.now(),
+                content,
+                status: 'active'
+            });
+            saveData(data);
+            input.value = '';
+            renderAnnouncements();
+            showToast('公告添加成功！', 'success');
+        }
+
+        function toggleAnnouncement(id) {
+            const data = loadData();
+            const ann = data.announcements.find(a => a.id === id);
+            if (ann) {
+                ann.status = ann.status === 'active' ? 'inactive' : 'active';
+                saveData(data);
+                renderAnnouncements();
+            }
+        }
+
+        function deleteAnnouncement(id) {
+            const data = loadData();
+            data.announcements = data.announcements.filter(a => a.id !== id);
+            saveData(data);
+            renderAnnouncements();
+            showToast('已删除公告', 'info');
+        }
+
+        // ===== 用户反馈 =====
+        function renderFeedback() {
+            const data = loadData();
+            const list = document.getElementById('feedbackList');
+            if (data.feedback.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">暂无用户反馈</p>';
+                return;
+            }
+            list.innerHTML = data.feedback.slice().reverse().map(f => `
+                <div class="submission-item">
+                    <div class="submission-header">
+                        <span class="submission-title">来自: ${esc(f.author || '匿名用户')}</span>
+                        <span class="submission-meta">${new Date(f.createdAt).toLocaleString('zh-CN')}</span>
+                    </div>
+                    <div class="submission-desc">${esc(f.content)}</div>
+                    <div class="action-btns">
+                        <button class="action-btn delete-btn" onclick="deleteFeedback(${f.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteFeedback(id) {
+            const data = loadData();
+            data.feedback = data.feedback.filter(f => f.id !== id);
+            saveData(data);
+            renderFeedback();
+        }
+
+        // ===== Tab切换 =====
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+            if (tab === 'feedback') renderFeedback();
+        }
+
+        // ===== 工具函数 =====
+        function esc(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(msg, type = 'info') {
+            // 移除旧 toast
+            const old = document.querySelector('.toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'success' : type === 'error' ? 'error' : ''}`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 2200);
+        }
+
+        // 初始化
+        (function() {
+            const data = loadData();
+            if (data.config.navTitle) document.title = data.config.navTitle;
+        })();
+    </script>
+</body>
+</html>

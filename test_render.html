@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Test</title>
+</head>
+<body>
+    <div id="gamesContainer" style="padding:20px;"></div>
+    <script src="games.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Manual render for testing
+        setTimeout(() => {
+            const container = document.getElementById('gamesContainer');
+            if (container) {
+                window.renderGames();
+                console.log('Games rendered, innerHTML length:', container.innerHTML.length);
+                console.log('First 500 chars:', container.innerHTML.substring(0, 500));
+            } else {
+                console.error('Container not found');
+            }
+            
+            // Check localStorage
+            const games = JSON.parse(localStorage.getItem('site_games_v2') || '[]');
+            console.log('localStorage games count:', games.length);
+            console.log('Game IDs:', games.map(g => g.id));
+        }, 100);
+    </script>
+</body>
+</html>

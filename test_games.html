@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Test</title></head>
+<body>
+<pre id="out"></pre>
+<script src="games.js"></script>
+<script src="app.js"></script>
+<script>
+    const out = document.getElementById('out');
+    setTimeout(() => {
+        const games = window.getAllGames ? window.getAllGames() : [];
+        out.textContent = 'Games count: ' + games.length;
+        out.textContent += '\n' + JSON.stringify(games.map(g=>({id:g.id,title:g.title,emoji:g.emoji})), null, 2);
+        const container = document.getElementById('gamesContainer');
+        if (container) {
+            out.textContent += '\nContainer exists: true';
+            out.textContent += '\nInner HTML length: ' + container.innerHTML.length;
+        } else {
+            out.textContent += '\nContainer: NULL';
+        }
+    }, 100);
+</script>
+</body>
+</html>
