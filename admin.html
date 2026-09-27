@@ -331,6 +331,7 @@
             <div class="admin-tabs">
                 <button class="tab-btn active" onclick="switchTab('submissions', this)">📥 投稿审核</button>
                 <button class="tab-btn" onclick="switchTab('addpost', this)">➕ 管理员投稿</button>
+                <button class="tab-btn" onclick="switchTab('users', this)">👥 用户管理</button>
                 <button class="tab-btn" onclick="switchTab('games', this)">🎮 小游戏管理</button>
                 <button class="tab-btn" onclick="switchTab('homeconfig', this)">🏠 首页配置</button>
                 <button class="tab-btn" onclick="switchTab('announcements', this)">📢 公告栏</button>
@@ -343,6 +344,16 @@
                     <h3>📥 投稿审核列表 <span style="font-size:12px;font-weight:400;color:var(--text-muted);" id="refreshHint">每5秒自动刷新</span></h3>
                     <div class="submissions-list" id="submissionsList">
                         <p style="color:var(--text-muted); text-align:center; padding:20px;">暂无投稿内容</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div class="admin-panel" id="panel-users">
+                <div class="panel-card">
+                    <h3>👥 注册用户管理</h3>
+                    <div id="usersList">
+                        <p style="color:var(--text-muted); text-align:center; padding:20px;">暂无注册用户</p>
                     </div>
                 </div>
             </div>
@@ -481,32 +492,41 @@
     </div>
 
     <!-- 编辑投稿弹窗 -->
-    <div class="edit-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
-        <div class="edit-modal" style="position:relative;">
-            <button class="modal-close" onclick="closeEditModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;font-size:16px;">✕</button>
-            <h3>✏️ 编辑投稿</h3>
-            <div class="admin-form">
-                <div class="form-group">
-                    <label class="glass-label">标题</label>
-                    <input type="text" class="glass-input" id="editTitle">
+        <div class="edit-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
+            <div class="edit-modal" style="position:relative;">
+                <button class="modal-close" onclick="closeEditModal()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;font-size:16px;">✕</button>
+                <h3>✏️ 编辑投稿</h3>
+                <div class="admin-form">
+                    <div class="form-group">
+                        <label class="glass-label">标题</label>
+                        <input type="text" class="glass-input" id="editTitle">
+                    </div>
+                    <div class="form-group">
+                        <label class="glass-label">新封面图</label>
+                        <input type="file" class="glass-input" id="editCover" accept="image/*" onchange="previewEditCover(this)">
+                        <div id="editCoverPreview" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="glass-label">简介</label>
+                        <textarea class="glass-input" id="editDesc" rows="3"></textarea>
+                    </div>
+                    <div class="form-group" id="editLinkGroup" style="display:none;">
+                        <label class="glass-label">网页链接</label>
+                        <input type="url" class="glass-input" id="editLink">
+                    </div>
+                    <button class="full-btn" onclick="saveEdit()">💾 保存修改</button>
                 </div>
-                <div class="form-group">
-                    <label class="glass-label">新封面图</label>
-                    <input type="file" class="glass-input" id="editCover" accept="image/*" onchange="previewEditCover(this)">
-                    <div id="editCoverPreview" style="margin-top:8px;"></div>
-                </div>
-                <div class="form-group">
-                    <label class="glass-label">简介</label>
-                    <textarea class="glass-input" id="editDesc" rows="3"></textarea>
-                </div>
-                <div class="form-group" id="editLinkGroup" style="display:none;">
-                    <label class="glass-label">网页链接</label>
-                    <input type="url" class="glass-input" id="editLink">
-                </div>
-                <button class="full-btn" onclick="saveEdit()">💾 保存修改</button>
             </div>
         </div>
-    </div>
+
+        <!-- 用户详情弹窗 -->
+        <div class="edit-modal-overlay" id="userDetailOverlay" onclick="if(event.target===this)closeUserDetail()">
+            <div class="edit-modal" style="position:relative;max-width:600px;">
+                <button class="modal-close" onclick="closeUserDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;font-size:16px;">✕</button>
+                <h3>👤 用户详情</h3>
+                <div id="userDetailContent" style="margin-top:16px;"></div>
+            </div>
+        </div>
 
     <script>
         // ===== 数据管理 =====
@@ -650,6 +670,11 @@
             if (isLoggedIn) {
                 renderSubmissions();
                 renderAnnouncements();
+                // 如果有用户管理面板，也刷新
+                const usersPanel = document.getElementById('panel-users');
+                if (usersPanel && usersPanel.classList.contains('active')) {
+                    renderUsers();
+                }
             }
         }, 5000);
 
@@ -994,6 +1019,92 @@
             renderFeedback();
         }
 
+        // ===== 用户管理 =====
+        function renderUsers() {
+            const data = loadData();
+            const list = document.getElementById('usersList');
+            const users = data.users || {};
+            const entries = Object.entries(users);
+
+            if (entries.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:20px;">暂无注册用户</p>';
+                return;
+            }
+
+            list.innerHTML = entries.map(([nickname, userData]) => `
+                <div class="submission-item" onclick="showUserDetail('${esc(nickname)}')" style="cursor:pointer;">
+                    <div class="submission-header">
+                        <span class="submission-title">${esc(nickname)}</span>
+                        <span class="action-btn edit-btn" style="font-size:11px;padding:4px 10px;">查看详情</span>
+                    </div>
+                    <div class="submission-meta">注册时间: ${userData.registerTime || '未知'}</div>
+                </div>
+            `).join('');
+        }
+
+        let __currentUserDetailNick = '';
+
+        function showUserDetail(nickname) {
+            const data = loadData();
+            const user = data.users[nickname];
+            if (!user) return;
+
+            __currentUserDetailNick = nickname;
+
+            // 获取该用户的投稿
+            const submissions = (data.content || []).filter(c => c.author === nickname);
+
+            let subsHtml = '';
+            if (submissions.length === 0) {
+                subsHtml = '<p style="color:var(--text-muted);font-size:13px;padding:12px;">暂无投稿</p>';
+            } else {
+                subsHtml = submissions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(item => {
+                    const statusClass = item.status === 'pending' ? 'status-pending' : item.status === 'approved' ? 'status-approved' : 'status-rejected';
+                    const statusText = item.status === 'pending' ? '待审核' : item.status === 'approved' ? '已通过' : '已拒绝';
+                    return `
+                        <div class="submission-item" style="margin-bottom:8px;">
+                            <div class="submission-header">
+                                <span class="submission-title">${esc(item.title)}</span>
+                                <span class="submission-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="submission-meta">${new Date(item.createdAt).toLocaleString('zh-CN')}</div>
+                            ${item.description ? `<div class="submission-desc">${esc(item.description)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('userDetailContent').innerHTML = `
+                <div style="padding:16px;background:rgba(102,126,234,0.08);border-radius:12px;margin-bottom:16px;">
+                    <div style="font-size:18px;font-weight:700;color:var(--primary-color);margin-bottom:8px;">${esc(nickname)}</div>
+                    <div style="font-size:13px;color:var(--text-muted);">注册时间: ${user.registerTime || '未知'}</div>
+                    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">投稿数量: ${submissions.length} 篇</div>
+                </div>
+                <h4 style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text-color);">📝 投稿记录</h4>
+                ${subsHtml}
+                <button class="full-btn" style="background:#fee2e2;color:#dc2626;margin-top:16px;" onclick="deleteUser('${esc(nickname)}')">🗑️ 删除该用户</button>
+            `;
+
+            document.getElementById('userDetailOverlay').classList.add('active');
+        }
+
+        function closeUserDetail() {
+            document.getElementById('userDetailOverlay').classList.remove('active');
+            __currentUserDetailNick = '';
+        }
+
+        function deleteUser(nickname) {
+            if (!confirm(`确定要删除用户 "${nickname}" 吗？该用户的所有投稿也会一并删除。`)) return;
+            const data = loadData();
+            delete data.users[nickname];
+            data.content = (data.content || []).filter(c => c.author !== nickname);
+            saveData(data);
+            closeUserDetail();
+            renderUsers();
+            renderSubmissions();
+            showToast('用户已删除', 'info');
+        }
+
         // ===== Tab切换 =====
         function switchTab(tab, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1001,6 +1112,7 @@
             btn.classList.add('active');
             document.getElementById('panel-' + tab).classList.add('active');
             if (tab === 'feedback') renderFeedback();
+            if (tab === 'users') renderUsers();
         }
 
         // ===== 工具函数 =====

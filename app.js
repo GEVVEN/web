@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// ===== 全局状态 =====
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// ===== 全局状态 =====
 let currentUser = null;
 let __content = [];
 let __users = {};
@@ -398,8 +398,10 @@ function openSubmitModal(fromSection) {
 
 function closeSubmitModal() {
     const modal = document.getElementById('submitModal');
-    if (modal) modal.classList.remove('active');
-    resetSubmitForm();
+    if (modal) {
+        modal.classList.remove('active');
+        resetSubmitForm();
+    }
 }
 
 function selectSubmitType(type) {
@@ -653,7 +655,7 @@ function doRegister() {
         return;
     }
 
-    __users[nickname] = { password: btoa(password) };
+    __users[nickname] = { password: btoa(password), registerTime: new Date().toLocaleString('zh-CN') };
     localStorage.setItem('users', JSON.stringify(__users));
 
     currentUser = { nickname, password };

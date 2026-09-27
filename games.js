@@ -619,6 +619,45 @@ function gameOverSnake() {
     snakeCtx.fillText('点击重新开始', snakeCanvas.width / 2, snakeCanvas.height / 2 + 40);
 }
 
+// ========== 触屏控制接口 ==========
+window.tetrisMove = function(dx, dy) {
+    if (!tetrisIsRunning || !tetrisPiece) return;
+    if (!checkCollision(tetrisPiece, dx, dy)) {
+        tetrisPiece.x += dx;
+        tetrisPiece.y += dy;
+        if (dy > 0) tetrisScore += 1;
+    }
+    drawTetris();
+    updateTetrisScore();
+};
+
+window.tetrisRotate = function() {
+    if (!tetrisIsRunning || !tetrisPiece) return;
+    rotatePiece();
+    drawTetris();
+};
+
+window.tetrisHardDrop = function() {
+    if (!tetrisIsRunning || !tetrisPiece) return;
+    while (!checkCollision(tetrisPiece, 0, 1)) {
+        tetrisPiece.y++;
+        tetrisScore += 2;
+    }
+    lockPiece();
+    clearLines();
+    spawnTetrisPiece();
+    drawTetris();
+    updateTetrisScore();
+};
+
+window.snakeChangeDir = function(dir) {
+    if (!snakeIsRunning) return;
+    const opposites = { up: 'down', down: 'up', left: 'right', right: 'left' };
+    if (dir !== opposites[snakeDirection]) {
+        snakeNextDirection = dir;
+    }
+};
+
 // ========== 统一的游戏控制接口（供 game.html 调用）==========
 window.gameStart = function() {
     if (window.__activeGame === 'tetris') startTetrisGame();
@@ -629,3 +668,6 @@ window.gamePause = function() {
     if (window.__activeGame === 'tetris') pauseTetrisGame();
     else if (window.__activeGame === 'snake') pauseSnakeGame();
 };
+
+window.startGame = window.gameStart;
+window.togglePause = window.gamePause;

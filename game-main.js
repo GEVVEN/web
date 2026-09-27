@@ -6,6 +6,12 @@
     const gameType = urlParams.get('game') || 'tetris';
     const gameUrl = urlParams.get('url');
 
+    // 游戏对应的 iframe URL
+    const GAME_IFRAME_URLS = {
+        solitaire: 'https://www.zhizhuzhipai.cn/',
+        spider: 'https://www.zhizhuzhipai.cn/spider.html'
+    };
+
     function init() {
         loadGamePage(gameType, gameUrl);
     }
@@ -20,8 +26,11 @@
         const scoreEl = document.getElementById('gameScore');
         const highScoreEl = document.getElementById('gameHighScore');
         const fallback = document.getElementById('iframeFallback');
+        const touchControls = document.getElementById('touchControls');
+        const touchHint = document.getElementById('touchHint');
+        const touchActionBtn = document.getElementById('touchActionBtn');
 
-        // 重置显示
+        // 重置
         canvasArea.style.display = 'none';
         iframeArea.style.display = 'none';
         iframe.src = '';
@@ -30,8 +39,15 @@
         fullscreenBtn.style.display = 'none';
         scoreEl.style.display = '';
         highScoreEl.style.display = '';
+        touchControls.style.display = 'none';
+        touchHint.style.display = 'none';
+        touchActionBtn.style.display = 'none';
+        fallback.style.display = 'none';
 
-        // 处理自定义 URL（后台添加的网页游戏）
+        // 判断是否手机
+        const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+
+        // 自定义 URL 游戏
         if (customUrl && customUrl.startsWith('http')) {
             currentGame = 'webgame';
             window.__activeGame = 'webgame';
@@ -44,31 +60,40 @@
             fullscreenBtn.style.display = '';
             scoreEl.style.display = 'none';
             highScoreEl.style.display = 'none';
-            document.getElementById('gameInstr').textContent = '在游戏画面内直接操作 | 点击上方新窗口按钮在新标签页打开';
-            loadIframeGame(customUrl, '网页游戏', fallback);
+            loadIframeGame(customUrl, customUrl, fallback);
+            if (isMobile) showTouchHint();
             return;
         }
 
+        // 俄罗斯方块
         if (type === 'tetris') {
             currentGame = 'tetris';
             window.__activeGame = 'tetris';
             document.getElementById('gameTitle').textContent = '🧩 俄罗斯方块';
-            document.getElementById('gameDesc').textContent = '经典益智游戏，按方向键移动方块';
+            document.getElementById('gameDesc').textContent = '经典益智游戏';
             document.title = '俄罗斯方块 - 小游戏';
             canvasArea.style.display = 'flex';
-            document.getElementById('gameInstr').textContent = '← → 移动 | ↑ 旋转 | ↓ 加速下落 | 空格 硬降 | 点击"开始游戏"启动';
-            setTimeout(() => { initTetris(); }, 100);
+            if (!isMobile) {
+                document.getElementById('gameInstr').textContent = '← → 移动 | ↑ 旋转 | ↓ 加速 | 空格 硬降';
+            }
+            if (isMobile) showTouchControls();
+            setTimeout(() => { initTetris(); }, 150);
 
+        // 贪吃蛇
         } else if (type === 'snake') {
             currentGame = 'snake';
             window.__activeGame = 'snake';
             document.getElementById('gameTitle').textContent = '🐍 贪吃蛇';
-            document.getElementById('gameDesc').textContent = '经典街机游戏，控制蛇吃食物变长';
+            document.getElementById('gameDesc').textContent = '经典街机游戏';
             document.title = '贪吃蛇 - 小游戏';
             canvasArea.style.display = 'flex';
-            document.getElementById('gameInstr').textContent = '← → ↑ ↓ 控制方向 | 点击"开始游戏"启动';
-            setTimeout(() => { initSnake(); }, 100);
+            if (!isMobile) {
+                document.getElementById('gameInstr').textContent = '← → ↑ ↓ 控制方向';
+            }
+            if (isMobile) showTouchControls();
+            setTimeout(() => { initSnake(); }, 150);
 
+        // iframe 纸牌游戏
         } else if (type === 'solitaire' || type === 'spider') {
             currentGame = type;
             window.__activeGame = type;
@@ -78,7 +103,7 @@
                 document.title = '纸牌接龙 - 小游戏';
             } else {
                 document.getElementById('gameTitle').textContent = '🕷️ 蜘蛛纸牌';
-                document.getElementById('gameDesc').textContent = '蜘蛛纸牌，K→A 同花色序列自动消除';
+                document.getElementById('gameDesc').textContent = '蜘蛛纸牌';
                 document.title = '蜘蛛纸牌 - 小游戏';
             }
             iframeArea.style.display = 'block';
@@ -87,13 +112,8 @@
             fullscreenBtn.style.display = '';
             scoreEl.style.display = 'none';
             highScoreEl.style.display = 'none';
-            document.getElementById('gameInstr').textContent = '在游戏画面内直接操作 | 点击上方新窗口按钮在新标签页打开';
-
-            if (type === 'solitaire') {
-                loadSolitaireIframe(fallback);
-            } else {
-                loadSpiderIframe(fallback);
-            }
+            loadIframeGame(GAME_IFRAME_URLS[type], GAME_IFRAME_URLS[type], fallback);
+            if (isMobile) showTouchHint();
 
         } else {
             document.getElementById('gameTitle').textContent = '❌ 游戏不存在';
@@ -101,91 +121,42 @@
         }
     }
 
-    function loadSolitaireIframe(fallback) {
-        const iframe = document.getElementById('gameIframe');
-        const iframeArea = document.getElementById('gameIframeArea');
-        const urls = [
-            'https://www.zhizhuzhipai.cn/',
-            'https://solitaire.parade.com/'
-        ];
-        let idx = 0;
-
-        function tryLoad() {
-            if (idx >= urls.length) {
-                showFallback(fallback, urls[urls.length - 1], '纸牌接龙');
-                return;
-            }
-            fallback.style.display = 'none';
-            iframeArea.style.display = 'block';
-            iframe.style.display = 'block';
-            iframe.src = urls[idx];
-            idx++;
-
-            let loaded = false;
-            iframe.onload = function() { loaded = true; fallback.style.display = 'none'; };
-
-            setTimeout(function() {
-                if (!loaded) {
-                    try {
-                        const doc = iframe.contentWindow && iframe.contentWindow.document;
-                        if (doc && doc.body && doc.body.innerHTML.trim() !== '') {
-                            loaded = true;
-                            fallback.style.display = 'none';
-                        } else {
-                            tryLoad();
-                        }
-                    } catch(e) {
-                        tryLoad();
-                    }
-                }
-            }, 8000);
+    function showTouchControls() {
+        const touchControls = document.getElementById('touchControls');
+        const touchHint = document.getElementById('touchHint');
+        touchControls.style.display = 'flex';
+        touchHint.style.display = 'block';
+        // 俄罗斯方块需要旋转/硬降按钮
+        if (currentGame === 'tetris') {
+            document.getElementById('touchActionBtn').style.display = 'flex';
         }
-        tryLoad();
     }
 
-    function loadSpiderIframe(fallback) {
-        const iframe = document.getElementById('gameIframe');
-        const iframeArea = document.getElementById('gameIframeArea');
-        const urls = [
-            'https://www.zhizhuzhipai.cn/spider.html',
-            'https://zh.spidersolitaire.cn/'
-        ];
-        let idx = 0;
-
-        function tryLoad() {
-            if (idx >= urls.length) {
-                showFallback(fallback, urls[urls.length - 1], '蜘蛛纸牌');
-                return;
-            }
-            fallback.style.display = 'none';
-            iframeArea.style.display = 'block';
-            iframe.style.display = 'block';
-            iframe.src = urls[idx];
-            idx++;
-
-            let loaded = false;
-            iframe.onload = function() { loaded = true; fallback.style.display = 'none'; };
-
-            setTimeout(function() {
-                if (!loaded) {
-                    try {
-                        const doc = iframe.contentWindow && iframe.contentWindow.document;
-                        if (doc && doc.body && doc.body.innerHTML.trim() !== '') {
-                            loaded = true;
-                            fallback.style.display = 'none';
-                        } else {
-                            tryLoad();
-                        }
-                    } catch(e) {
-                        tryLoad();
-                    }
-                }
-            }, 8000);
-        }
-        tryLoad();
+    function showTouchHint() {
+        const touchHint = document.getElementById('touchHint');
+        touchHint.style.display = 'block';
+        touchHint.textContent = '点击"打开游戏"在新页面游玩';
     }
 
-    function loadIframeGame(url, gameName, fallback) {
+    // 触屏方向
+    window.touchDir = function(dir) {
+        if (currentGame === 'tetris') {
+            if (dir === 'left') tetrisMove(-1, 0);
+            else if (dir === 'right') tetrisMove(1, 0);
+            else if (dir === 'down') tetrisMove(0, 1);
+            else if (dir === 'up') tetrisRotate();
+        } else if (currentGame === 'snake') {
+            snakeChangeDir(dir);
+        }
+    };
+
+    window.touchAction = function() {
+        if (currentGame === 'tetris') {
+            tetrisHardDrop();
+        }
+    };
+
+    function loadIframeGame(url, fallbackUrl, fallback) {
         const iframe = document.getElementById('gameIframe');
         const iframeArea = document.getElementById('gameIframeArea');
 
@@ -195,15 +166,15 @@
         iframe.src = url;
 
         let loaded = false;
-        let loadTimer = null;
+        let timer = null;
 
         iframe.onload = function() {
             loaded = true;
-            if (loadTimer) clearTimeout(loadTimer);
+            if (timer) clearTimeout(timer);
             fallback.style.display = 'none';
         };
 
-        loadTimer = setTimeout(function() {
+        timer = setTimeout(function() {
             if (!loaded) {
                 try {
                     const doc = iframe.contentWindow && iframe.contentWindow.document;
@@ -211,24 +182,31 @@
                         loaded = true;
                         fallback.style.display = 'none';
                     } else {
-                        showFallback(fallback, url, gameName);
+                        showFallback(fallback, fallbackUrl);
                     }
                 } catch(e) {
-                    showFallback(fallback, url, gameName);
+                    showFallback(fallback, fallbackUrl);
                 }
             }
         }, 12000);
     }
 
-    function showFallback(fallback, url, gameName) {
+    function showFallback(fallback, url) {
         fallback.style.display = 'flex';
-        const link = fallback.querySelector('a');
+        const link = fallback.querySelector('#fallbackLink');
         if (link) link.href = url;
-        const desc = fallback.querySelector('div:nth-child(2)');
-        if (desc) desc.textContent = gameName + ' 页面加载失败';
-        const hint = fallback.querySelector('div:nth-child(3)');
-        if (hint) hint.textContent = '点击下方按钮直接访问游戏网站';
     }
+
+    // 打开游戏网页（替代全屏）
+    window.openGameWeb = function() {
+        const url = GAME_IFRAME_URLS[currentGame] || '';
+        if (url) {
+            window.open(url, '_blank');
+        } else {
+            const params = new URLSearchParams(window.location.search);
+            window.open('game.html?' + params.toString(), '_blank');
+        }
+    };
 
     window.startGame = function() {
         if (window.__activeGame === 'tetris' && typeof startTetrisGame === 'function') startTetrisGame();
@@ -238,13 +216,6 @@
     window.togglePause = function() {
         if (window.__activeGame === 'tetris' && typeof pauseTetrisGame === 'function') pauseTetrisGame();
         else if (window.__activeGame === 'snake' && typeof pauseSnakeGame === 'function') pauseSnakeGame();
-    };
-
-    window.toggleFullscreen = function() {
-        // iframe 游戏：直接在新标签页打开，最可靠的方式
-        const params = new URLSearchParams(window.location.search);
-        const newUrl = 'game.html?' + params.toString();
-        window.open(newUrl, '_blank');
     };
 
     window.goBack = function() {
